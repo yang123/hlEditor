@@ -1,0 +1,223 @@
+<html>
+
+<head>
+    <link rel="stylesheet" href="rainbow.css">
+    <script src="highlight.pack.js"></script>
+    <script src="jquery-1.10.2.js"></script>
+
+    <style>
+        pre{
+            position: relative;
+            white-space: normal;
+            font-size: 22px;
+            padding-left: 50px;
+
+        }
+        code{
+            white-space: pre;
+
+        }
+        .line_num{
+            position: absolute;
+            padding: 0.5em 0;
+            left: 0px;
+            background: #F0F0F0;
+            width: 50px;
+            text-align: right;
+            color: #A60000;
+        }
+        .line_num .curr{
+            background: #FFFFD7
+        }
+        .line_num div{
+            white-space: pre;
+        }
+        .num{
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+
+<pre style="">
+    <div id="lineNum" class="line_num">
+        <div class="line_1 curr" id="line_num_1"><span class="num">1</span> </div>
+    </div>
+
+<code id="show" class="lang-javascript" contenteditable="true" style="">
+function init(){
+    $scope.req.getArticle();
+    $('pre code').each(function(i, block) {
+        hljs.highlightBlock(block);
+    });
+}
+</code>
+</pre>
+
+<script>
+    var edit = edit();
+
+
+    function edit(){
+        var currLineNum, line_num_1, element, line_num_height ;
+        currLineNum = $("#lineNum>div").length;
+        line_num_1 = $("#line_num_1");
+        element = document.getElementById("show");
+        line_num_height = line_num_1[0].getBoundingClientRect().height;
+        line_num_height = Math.floor(line_num_height * 100) / 100;
+        hljs.initHighlighting.called = false;
+        hljs.initHighlighting();
+        initLineNum();
+
+        var PinyinFlag = false, compositionAble = false;
+
+        $(element).keydown(function(event){
+            /****************监听拼音事件如果不起作用，则启用下面这段************************/
+//            if(!compositionAble){
+//                if(event.keyCode == 229){
+//                    PinyinFlag = true;
+//                }else{
+//                    PinyinFlag = false;
+//                }
+//            }
+            if(PinyinFlag){
+                $(".pos").remove();
+                console.log("删除 定位");
+            }else {
+                recordPointer(event);
+                this.innerHTML = this.innerHTML.replace(/<span[^<]*>/g,"").replace(/<\/span>/g,"");
+                hljs.initHighlighting.called = false;
+                hljs.initHighlighting();
+                console.log("渲染..");
+                setPointer();
+            }
+
+//            console.log("keydown ...end");
+
+        }).keyup(function(event){
+//            console.log("keyup ...start");
+//            positionLine();
+        }).click(function (event) {
+            recordPointer(event);
+//            positionLine();
+        }).on('input', function () {
+            initLineNum();
+//            positionLine();
+        }).on('compositionstart', function () {
+            PinyinFlag = true;//此时为拼音输入法
+            compositionAble = true;
+        }).on('compositionend', function () {
+            PinyinFlag = false;//此时为直接输入，包括数字、字符和英文输入
+        });
+
+        var i_num = 0;
+        //定位光标  在光标处插入一个i标签
+        function recordPointer(){
+            var range = window.getSelection().getRangeAt(0);
+//            $(".pos").remove();
+//            range.collapse(false);
+            var el_i = document.getElementsByClassName("pos");
+            if(el_i.length == 0){
+                el_i = document.createElement("i");
+                el_i.classList.add("pos");
+            }else{
+                el_i = el_i[0];
+            }
+            console.log("定位 鼠标");
+            range.surroundContents(el_i);
+
+        }
+        //插入光标
+        function setPointer(){
+            span = document.getElementsByClassName("pos");
+            if(span.length > 0){
+                span = span[0];
+                var range = document.createRange();
+                range.selectNode(span);
+                range.collapse(false);
+                var selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(range);
+            }
+            setTimeout(function () {
+                positionLine();
+            },1000)
+        }
+
+        function initLineNum(){
+            var fontSize = $("#show").css("font-size").replace("px","");
+            fontSize = parseFloat(fontSize);
+            var conHeight = element.getBoundingClientRect().height -fontSize;
+            var lineNum = Math.round(conHeight/line_num_height);
+            while(currLineNum < lineNum){
+                currLineNum++;
+                $("#lineNum").append("<div class='line_"+currLineNum+"' ><span class='num'>"+currLineNum+"</span> </div>");
+            }
+            while(currLineNum > lineNum){
+                $("#lineNum>div:last").remove()
+                currLineNum--;
+            }
+        }
+
+        function positionLine(){
+
+
+
+
+
+
+
+
+
+
+
+
+            //todo 定位行号
+            console.log($(".pos").position().top);
+return;
+            var top  = $(".pos").position().top;
+            var currLine = Math.round(top/line_num_height);
+
+            console.log("currLine:"+(currLine+1));
+            return;
+            currLine = $("#lineNum").children().eq(currLine);
+            if(! currLine.hasClass("curr")){
+                $("#lineNum .curr").removeClass("curr");
+                currLine.addClass("curr");
+            }
+
+//            $("#lineNum").children().eq(currLine).addClass("curr");
+
+//            console.log("currLine:"+currLine);
+//
+//            var fontSize = $("#show").css("font-size").replace("px","");
+//            fontSize = parseFloat(fontSize);
+//            var conHeight = element.getBoundingClientRect().height -fontSize;
+//            var lineNum = Math.round(conHeight/line_num_height);
+//            while(currLineNum < lineNum){
+//                currLineNum++;
+//                $("#lineNum").append("<div><span class='num'>"+currLineNum+"</span> </div>");
+//            }
+//            while(currLineNum > lineNum){
+//                $("#lineNum>div:last").remove()
+//                currLineNum--;
+//            }
+        }
+
+        return {
+            getContent:function(){
+                var html = element.innerHTML;
+                return html.replace(/<span[^<]*>/g,"").replace(/<\/span>/g,"");
+            }
+        }
+    }
+
+
+
+
+
+</script>
+</body>
+
+</html>
